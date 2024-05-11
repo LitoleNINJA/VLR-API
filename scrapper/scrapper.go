@@ -17,15 +17,17 @@ const (
 )
 
 type Match struct {
+	ID        string
 	Team1     string
 	Team2     string
 	Score     []int
+	Rounds    []int
 	StartTime string
 	Tag       string
 	Status    MatchStatus
 }
 
-func GetMatches() []Match {
+func GetMatchesFromVLR() []Match {
 	c := colly.NewCollector()
 
 	var matches []Match
@@ -44,7 +46,7 @@ func GetMatches() []Match {
 
 	c.Wait()
 
-	saveMatchData(matches)
+	go saveMatchData(matches)
 
 	logfile, err := os.OpenFile("logs.txt", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
 	if err != nil {

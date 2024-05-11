@@ -7,7 +7,7 @@ import (
 
 func TestGetMatches(t *testing.T) {
 	expected := []Match{} // replace this with the expected result
-	result := GetMatches()
+	result := GetMatchesFromVLR()
 
 	if !reflect.DeepEqual(result, expected) {
 		t.Errorf("GetMatches() = %v; want %v", result, expected)

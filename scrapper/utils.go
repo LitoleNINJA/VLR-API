@@ -2,30 +2,36 @@ package scrapper
 
 import (
 	"encoding/json"
-	"log"
 	"os"
+	"strconv"
 	"strings"
 
 	"github.com/gocolly/colly"
+	"github.com/lithammer/shortuuid"
 )
 
 func getMatch(e *colly.HTMLElement) (Match, error) {
 	match := Match{}
 
+	match.ID = shortuuid.New()
 	match.StartTime = strings.TrimSpace(e.ChildText("div.h-match-eta"))
 	match.Tag = strings.TrimSpace(e.ChildText("div.h-match-preview-event"))
 	match.Status = Upcoming
 	match.Score = []int{0, 0}
+	match.Rounds = []int{0, 0}
 
-	e.ForEach("div.h-match-team-name", func(_ int, el *colly.HTMLElement) {
+	e.ForEach("div.h-match-team", func(_ int, el *colly.HTMLElement) {
 		if match.Team1 == "" {
-			match.Team1 = strings.TrimSpace(el.Text)
+			match.Team1 = strings.TrimSpace(el.ChildText("div.h-match-team-name"))
+			match.Score[0], _ = strconv.Atoi(el.ChildText("div.h-match-team-score"))
+			match.Rounds[0], _ = strconv.Atoi(el.ChildText("div.h-match-team-rounds > span"))
 		} else {
-			match.Team2 = strings.TrimSpace(el.Text)
+			match.Team2 = strings.TrimSpace(el.ChildText("div.h-match-team-name"))
+			match.Score[1], _ = strconv.Atoi(el.ChildText("div.h-match-team-score"))
+			match.Rounds[1], _ = strconv.Atoi(el.ChildText("div.h-match-team-rounds > span"))
 		}
-	})
 
-	log.Println(match)
+	})
 
 	return match, nil
 }
@@ -47,6 +53,16 @@ func saveMatchData(matches []Match) error {
 		return err
 	}
 
-	log.Println(matches)
 	return nil
+}
+
+func MarshalMatches(matches []Match) string {
+	matchData, _ := json.Marshal(matches)
+	return string(matchData)
+}
+
+func UnmarshalMatches(data string) []Match {
+	var matches []Match
+	json.Unmarshal([]byte(data), &matches)
+	return matches
 }
