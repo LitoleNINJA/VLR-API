@@ -2,8 +2,6 @@ package scrapper
 
 import (
 	"fmt"
-	"log"
-	"os"
 
 	"github.com/gocolly/colly"
 )
@@ -17,7 +15,7 @@ const (
 )
 
 type Match struct {
-	ID        string
+	URL       string
 	Team1     string
 	Team2     string
 	Score     []int
@@ -25,6 +23,7 @@ type Match struct {
 	StartTime string
 	Tag       string
 	Status    MatchStatus
+	Region    string
 }
 
 func GetMatchesFromVLR() []Match {
@@ -46,15 +45,35 @@ func GetMatchesFromVLR() []Match {
 
 	c.Wait()
 
-	go saveMatchData(matches)
+	c.OnError(func(r *colly.Response, err error) {
+		fmt.Println("Request URL:", r.Request.URL, "failed with response:", r, "\nError:", err)
+	})
 
-	logfile, err := os.OpenFile("logs.txt", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
-	if err != nil {
-		log.Fatalf("error opening file: %v", err)
-	}
-	defer logfile.Close()
+	return matches
+}
 
-	log.SetOutput(logfile)
+func GetResultsFromVLR() []Match {
+	c := colly.NewCollector()
+
+	var matches []Match
+	c.OnHTML("div.wf-card", func(e *colly.HTMLElement) {
+		e.ForEach("a.wf-module-item", func(_ int, el *colly.HTMLElement) {
+			match, err := getMatchResult(el)
+			if err != nil {
+				fmt.Println(err)
+				return
+			}
+			matches = append(matches, match)
+		})
+	})
+
+	c.Visit("https://www.vlr.gg/matches/results")
+
+	c.Wait()
+
+	c.OnError(func(r *colly.Response, err error) {
+		fmt.Println("Request URL:", r.Request.URL, "failed with response:", r, "\nError:", err)
+	})
 
 	return matches
 }

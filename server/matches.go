@@ -21,7 +21,16 @@ func setAPIEndpoints(router *gin.Engine) {
 }
 
 func getMatches(c *gin.Context) {
+	status := c.Query("status")
 
+	if status == "" || status == "live" {
+		getLiveMatches(c)
+	} else if status == "completed" {
+		getCompletedMatches(c)
+	}
+}
+
+func getLiveMatches(c *gin.Context) {
 	var matches []scrapper.Match
 	val, err := rdb.Get(c, "matches").Result()
 	if err == nil {
@@ -43,14 +52,29 @@ func getMatches(c *gin.Context) {
 	c.IndentedJSON(200, res)
 }
 
-func getMatch(c *gin.Context) {
-	id := c.Param("id")
-	matches := scrapper.GetMatchesFromVLR()
-	for _, match := range matches {
-		if match.ID == id {
-			c.JSON(200, match)
-			return
+func getCompletedMatches(c *gin.Context) {
+	var matches []scrapper.Match
+	val, err := rdb.Get(c, "results").Result()
+	if err == nil {
+		fmt.Println("Fetching from Redis")
+		matches = scrapper.UnmarshalMatches(val)
+	} else {
+		fmt.Println("Fetching from VLR")
+		matches = scrapper.GetResultsFromVLR()
+		err := rdb.Set(c, "results", scrapper.MarshalMatches(matches), 100*time.Second).Err()
+		if err != nil {
+			fmt.Println("Error setting results in redis", err)
 		}
 	}
+
+	res := gin.H{
+		"matches": matches,
+		"count":   len(matches),
+	}
+	c.IndentedJSON(200, res)
+
+}
+
+func getMatch(c *gin.Context) {
 	c.IndentedJSON(404, gin.H{"message": "Match not found"})
 }

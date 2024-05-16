@@ -1,15 +1,18 @@
 package scrapper
 
 import (
-	"reflect"
 	"testing"
 )
 
-func TestGetMatches(t *testing.T) {
-	expected := []Match{} // replace this with the expected result
-	result := GetMatchesFromVLR()
+func TestGetMatchesAndResults(t *testing.T) {
+	matchesResult := GetMatchesFromVLR()
+	resultsResult := GetResultsFromVLR()
 
-	if !reflect.DeepEqual(result, expected) {
-		t.Errorf("GetMatches() = %v; want %v", result, expected)
+	if len(matchesResult) == 0 {
+		t.Error("No matches found")
+	}
+
+	if len(resultsResult) == 0 {
+		t.Error("No results found")
 	}
 }
