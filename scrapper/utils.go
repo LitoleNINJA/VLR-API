@@ -59,7 +59,7 @@ func getMatchResult(e *colly.HTMLElement) (Match, error) {
 	match := Match{}
 
 	match.URL = e.Request.AbsoluteURL(e.Attr("href"))
-	match.Tag = strings.TrimSpace(e.ChildText("div.match-item-event.text-of"))
+	match.Tag = getTag(e)
 	match.Status = Completed
 	match.Score = []int{0, 0}
 	match.StartTime = strings.TrimSpace(e.ChildText("div.ml-eta.mod-completed"))
@@ -76,6 +76,18 @@ func getMatchResult(e *colly.HTMLElement) (Match, error) {
 	})
 
 	return match, nil
+}
+
+func getTag(e *colly.HTMLElement) string {
+	fullTagStr := strings.TrimSpace(e.ChildText("div.match-item-event.text-of"))
+
+	seasonStr := strings.TrimSpace(e.ChildText("div.match-item-event-series"))
+
+	tagStr := strings.ReplaceAll(fullTagStr, seasonStr, "")
+	tagStr = strings.ReplaceAll(tagStr, "\n", "")
+	tagStr = strings.ReplaceAll(tagStr, "\t", "")
+
+	return tagStr
 }
 
 func findRegion(tag string) string {
