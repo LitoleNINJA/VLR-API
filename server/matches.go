@@ -11,8 +11,8 @@ import (
 
 var rdb = redis.NewClient(&redis.Options{
 	Addr:     "localhost:6379",
-	Password: "", // no password set
-	DB:       0,  // use default DB
+	Password: "",
+	DB:       0,
 })
 
 func setAPIEndpoints(router *gin.Engine) {
@@ -22,8 +22,8 @@ func setAPIEndpoints(router *gin.Engine) {
 		})
 
 	})
-	router.GET("/matches", getMatches)
-	router.GET("/matches/:id", getMatch)
+	router.GET("/api/matches", getMatches)
+	router.GET("/api/matches/:id", getMatch)
 }
 
 func getMatches(c *gin.Context) {
