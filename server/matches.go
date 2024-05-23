@@ -16,6 +16,12 @@ var rdb = redis.NewClient(&redis.Options{
 })
 
 func setAPIEndpoints(router *gin.Engine) {
+	router.GET("/", func(c *gin.Context) {
+		c.JSON(200, gin.H{
+			"message": "Welcome to VLR API",
+		})
+
+	})
 	router.GET("/matches", getMatches)
 	router.GET("/matches/:id", getMatch)
 }
